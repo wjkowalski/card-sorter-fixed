@@ -341,12 +341,13 @@
         <p>This repo is public. Anyone can download it, use it, and modify it as they wish!</p>
         <p>INSTRUCTIONS:<br />
           Add cards with the large plus button, then drag them into categories or subcategories. <br />
-          To send someone a list of unsorted cards so they can sort them, use Share Link: 
+          To share the current card arrangement, use Share Link:
           <ol>
             <li>Enter the card names individually in the Create Cards section</li>
+            <li>Leave the cards unsorted, or arrange them in categories and subcategories</li>
             <li>Click Generate Share Link</li>
             <li>Click Copy Share Link</li>
-            <li>Sharing that link with anyone should bring them to the sorting tool with the unsorted cards pre-populated and ready to be sorted</li>
+            <li>Sharing that link will open the sorting tool with the current arrangement preserved</li>
           </ol>
 
           To complete the APPD 5012 Card Sorting assignment, or to simply send someone your list of sorted cards as an unsortable object, use Export Data:
@@ -439,7 +440,7 @@
         <h2>Export</h2>
         <div class="field">
           <label for="shareLinkBox">Share link</label>
-          <input id="shareLinkBox" type="text" readonly placeholder="Generate a share link to pre-populate unsorted cards" />
+          <input id="shareLinkBox" type="text" readonly placeholder="Generate a link to the current card arrangement" />
         </div>
         <textarea id="exportBox" class="json-box" readonly placeholder="Exported data will appear here"></textarea>
       </aside>
@@ -529,7 +530,7 @@
       return {
         title: state.title,
         instructions: state.instructions,
-        cards: state.cards.map(card => ({ ...card, zone: 'bank' })),
+        cards: state.cards.map(card => ({ ...card })),
         categories: state.categories.map(category => ({ ...category }))
       };
     }
