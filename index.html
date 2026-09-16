@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Sort Builder</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --panel-2: #eef3fb;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-2: #1d4ed8;
+      --border: #dbe4f0;
+      --danger: #dc2626;
+      --shadow: 0 10px 30px rgba(37, 99, 235, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      margin: 0 0 6px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 24px;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-2);
+      border-color: var(--accent-2);
+    }
+
+    .btn-danger {
+      color: var(--danger);
+      border-color: #fecaca;
+      background: #fff5f5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 1.15rem;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: white;
+      color: var(--text);
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .plus-btn {
+      width: 100%;
+      min-height: 72px;
+      border: 2px dashed #93c5fd;
+      border-radius: 16px;
+      background: #eff6ff;
+      color: var(--accent);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: 0.2s ease;
+    }
+
+    .plus-btn:hover {
+      background: #dbeafe;
+      transform: translateY(-1px);
+    }
+
+    .plus-btn span {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .plus-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: white;
+      display: inline-grid;
+      place-items: center;
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .dropzone {
+      background: var(--panel-2);
+      border: 2px dashed #bfd2eb;
+      border-radius: 18px;
+      min-height: 220px;
+      padding: 14px;
+    }
+
+    .dropzone h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .dropzone.empty::after {
+      content: "Drag cards here";
+      display: block;
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding-top: 8px;
+    }
+
+    .card-bank {
+      min-height: 260px;
+    }
+
+    .card-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .card {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: white;
+      border: 1px solid #cfe0f5;
+      border-radius: 14px;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+      cursor: grab;
+      user-select: none;
+      max-width: 100%;
+    }
+
+    .card.dragging {
+      opacity: 0.55;
+      transform: rotate(2deg);
+    }
+
+    .card-text {
+      word-break: break-word;
+    }
+
+    .card-remove {
+      border: none;
+      background: transparent;
+      color: var(--danger);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 2px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .category-heading-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: stretch;
+    }
+
+    .category-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .subcategories {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .subcategory-zone {
+      min-height: 140px;
+      background: #f8fbff;
+      border-style: dashed;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .subcategory-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 4px 0 8px;
+    }
+
+    .category-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: white;
+      color: var(--text);
+    }
+
+    .json-box {
+      width: 100%;
+      min-height: 140px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="hero">
+      <div>
+        <h1>Card Sort Builder</h1>
+        <p>This repo is public. Anyone can download it, use it, and modify it as they wish!</p>
+        <p>INSTRUCTIONS:<br />
+          Add cards with the large plus button, then drag them into categories or subcategories. <br />
+          To send someone a list of unsorted cards so they can sort them, use Share Link: 
+          <ol>
+            <li>Enter the card names individually in the Create Cards section</li>
+            <li>Click Generate Share Link</li>
+            <li>Click Copy Share Link</li>
+            <li>Sharing that link with anyone should bring them to the sorting tool with the unsorted cards pre-populated and ready to be sorted</li>
+          </ol>
+
+          To complete the APPD 5012 Card Sorting assignment, or to simply send someone your list of sorted cards as an unsortable object, use Export Data:
+          <ol>
+            <li>Complete the card sorting activity.</li>
+            <li>Click the Export Data button.</li>
+            <li>Click the Copy Export button. This will put a JSON object on your clipboard.</li>
+            <li>Paste the export into a text file, and send that text file to the person you want to share it with. They will then click Open Interpreter and paste the JSON into the interpreter field to see the results.</li>
+          </ol>
+            
+        </p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="openInterpreterBtn">Open interpreter</button>
+      <button class="btn btn-primary" id="addCategoryBtn">Add category</button>
+      <button class="btn" id="exportBtn">Export data</button>
+      <button class="btn" id="copyBtn">Copy export</button>
+      <button class="btn" id="generateLinkBtn">Generate share link</button>
+      <button class="btn" id="copyLinkBtn">Copy share link</button>
+      <button class="btn btn-danger" id="resetBtn">Reset board</button>
+    </div>
+
+    <div class="layout">
+      <section class="panel" id="interpreterPanel" style="display: none; margin-bottom: 20px; grid-column: 1 / -1;">
+        <div class="top-row">
+          <div>
+            <h2 style="margin: 0 0 4px;">Sort interpreter</h2>
+            <div class="status">Paste exported JSON from a classmate to view their completed sort.</div>
+          </div>
+          <button class="btn" id="closeInterpreterBtn">Close interpreter</button>
+        </div>
+
+        <div class="field">
+          <label for="importBox">Paste classmate JSON</label>
+          <textarea id="importBox" placeholder='Paste exported JSON here'></textarea>
+        </div>
+        <div class="toolbar" style="margin-top: 0;">
+          <button class="btn btn-primary" id="loadImportBtn">Load sort</button>
+          <button class="btn" id="sampleImportBtn">Load current board export</button>
+          <button class="btn btn-danger" id="clearImportBtn">Clear interpreter</button>
+        </div>
+        <div class="status" id="importStatus">No imported sort loaded.</div>
+
+        <div class="panel" style="margin-top: 16px; background: #f8fbff; box-shadow: none;">
+          <div class="top-row">
+            <div>
+              <h2 id="importedTitle" style="margin: 0 0 4px;">Imported sort preview</h2>
+              <div class="status" id="importedInstructions">Paste JSON and click Load sort.</div>
+            </div>
+            <div class="status" id="importedCardCount">0 cards</div>
+          </div>
+
+          <section class="dropzone card-bank" id="importedBankZone">
+            <h3>Imported unsorted cards</h3>
+            <div class="card-list" id="importedBank"></div>
+          </section>
+
+          <h2 style="margin-top: 22px;">Imported categories</h2>
+          <section class="categories" id="importedCategories"></section>
+        </div>
+      </section>
+      <aside class="panel">
+        <h2>Create cards</h2>
+        <div class="field">
+          <label for="cardInput">New card text</label>
+          <input id="cardInput" type="text" maxlength="80" placeholder="Example: Order history" />
+        </div>
+        <button class="plus-btn" id="addCardBtn" aria-label="Add a new card">
+          <span><span class="plus-circle">+</span> Add new card</span>
+        </button>
+        <p class="small">Each card should contain one short word or phrase.</p>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
+
+        <h2>Instructions</h2>
+        <div class="field">
+          <label for="titleInput">Activity title</label>
+          <input id="titleInput" type="text" value="Sort these cards into groups that make sense to you" />
+        </div>
+        <div class="field">
+          <label for="instructionsInput">Instructions</label>
+          <textarea id="instructionsInput">Create cards, share this page, and ask classmates to group the cards into categories that feel logical. They can also rename the category and subcategory headings.</textarea>
+        </div>
+        <p class="small">Changes are saved automatically in the browser using local storage.</p>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0;">
+
+        <h2>Export</h2>
+        <div class="field">
+          <label for="shareLinkBox">Share link</label>
+          <input id="shareLinkBox" type="text" readonly placeholder="Generate a share link to pre-populate unsorted cards" />
+        </div>
+        <textarea id="exportBox" class="json-box" readonly placeholder="Exported data will appear here"></textarea>
+      </aside>
+
+      <main class="panel">
+        <div class="top-row">
+          <div>
+            <h2 id="boardTitle" style="margin: 0 0 4px;">Sort these cards into groups that make sense to you</h2>
+            <div class="status" id="boardInstructions">Create cards, share this page, and ask classmates to group the cards into categories that feel logical. They can also rename the category and subcategory headings.</div>
+          </div>
+          <div class="status" id="cardCount">0 cards</div>
+        </div>
+
+        <section class="dropzone card-bank" data-zone="bank">
+          <h3>Unsorted cards</h3>
+          <div class="card-list" id="bank"></div>
+        </section>
+
+        <h2 style="margin-top: 22px;">Categories</h2>
+        <section class="categories" id="categories"></section>
+      </main>
+    </div>
+  </div>
+
+  <template id="cardTemplate">
+    <div class="card" draggable="true">
+      <span class="card-text"></span>
+      <button class="card-remove" type="button" title="Remove card">×</button>
+    </div>
+  </template>
+
+  <script>
+    const STORAGE_KEY = 'card-sort-builder-v1';
+
+    const state = {
+      title: 'Sort these cards into groups that make sense to you',
+      instructions: 'Create cards, share this page, and ask classmates to group the cards into categories that feel logical. They can also rename the category and subcategory headings.',
+      cards: [],
+      categories: []
+    };
+
+    const els = {
+      openInterpreterBtn: document.getElementById('openInterpreterBtn'),
+      closeInterpreterBtn: document.getElementById('closeInterpreterBtn'),
+      interpreterPanel: document.getElementById('interpreterPanel'),
+      importBox: document.getElementById('importBox'),
+      loadImportBtn: document.getElementById('loadImportBtn'),
+      sampleImportBtn: document.getElementById('sampleImportBtn'),
+      clearImportBtn: document.getElementById('clearImportBtn'),
+      importStatus: document.getElementById('importStatus'),
+      importedTitle: document.getElementById('importedTitle'),
+      importedInstructions: document.getElementById('importedInstructions'),
+      importedCardCount: document.getElementById('importedCardCount'),
+      importedBank: document.getElementById('importedBank'),
+      importedBankZone: document.getElementById('importedBankZone'),
+      importedCategories: document.getElementById('importedCategories'),
+      cardInput: document.getElementById('cardInput'),
+      addCardBtn: document.getElementById('addCardBtn'),
+      addCategoryBtn: document.getElementById('addCategoryBtn'),
+      bank: document.getElementById('bank'),
+      categories: document.getElementById('categories'),
+      exportBtn: document.getElementById('exportBtn'),
+      copyBtn: document.getElementById('copyBtn'),
+      generateLinkBtn: document.getElementById('generateLinkBtn'),
+      copyLinkBtn: document.getElementById('copyLinkBtn'),
+      shareLinkBox: document.getElementById('shareLinkBox'),
+      resetBtn: document.getElementById('resetBtn'),
+      exportBox: document.getElementById('exportBox'),
+      titleInput: document.getElementById('titleInput'),
+      instructionsInput: document.getElementById('instructionsInput'),
+      boardTitle: document.getElementById('boardTitle'),
+      boardInstructions: document.getElementById('boardInstructions'),
+      cardCount: document.getElementById('cardCount'),
+      cardTemplate: document.getElementById('cardTemplate')
+    };
+
+    function uid() {
+      return Math.random().toString(36).slice(2, 10);
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateExport();
+    }
+
+    function getShareState() {
+      return {
+        title: state.title,
+        instructions: state.instructions,
+        cards: state.cards.map(card => ({ ...card, zone: 'bank' })),
+        categories: state.categories.map(category => ({ ...category }))
+      };
+    }
+
+    function generateShareLink() {
+      const shareState = getShareState();
+      const encoded = encodeURIComponent(JSON.stringify(shareState));
+      const url = `${location.origin}${location.pathname}#data=${encoded}`;
+      els.shareLinkBox.value = url;
+      return url;
+    }
+
+    function loadFromUrl() {
+      const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
+      const params = new URLSearchParams(hash);
+      const data = params.get('data');
+      if (!data) return false;
+
+      try {
+        const parsed = JSON.parse(decodeURIComponent(data));
+        state.title = parsed.title || state.title;
+        state.instructions = parsed.instructions || state.instructions;
+        state.cards = Array.isArray(parsed.cards) ? parsed.cards : [];
+        state.categories = Array.isArray(parsed.categories) && parsed.categories.length
+          ? parsed.categories
+          : [
+              { id: uid(), name: 'Group 1', parentId: null },
+              { id: uid(), name: 'Group 2', parentId: null },
+              { id: uid(), name: 'Group 3', parentId: null }
+            ];
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function load() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        state.categories = [
+          { id: uid(), name: 'Group 1', parentId: null },
+          { id: uid(), name: 'Group 2', parentId: null },
+          { id: uid(), name: 'Group 3', parentId: null }
+        ];
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        state.title = parsed.title || state.title;
+        state.instructions = parsed.instructions || state.instructions;
+        state.cards = Array.isArray(parsed.cards) ? parsed.cards : [];
+        state.categories = Array.isArray(parsed.categories) && parsed.categories.length
+          ? parsed.categories
+          : [
+              { id: uid(), name: 'Group 1', parentId: null },
+              { id: uid(), name: 'Group 2', parentId: null },
+              { id: uid(), name: 'Group 3', parentId: null }
+            ];
+      } catch {
+        state.categories = [
+          { id: uid(), name: 'Group 1', parentId: null },
+          { id: uid(), name: 'Group 2', parentId: null },
+          { id: uid(), name: 'Group 3', parentId: null }
+        ];
+      }
+    }
+
+    function normalizeCategories() {
+      state.categories.forEach(category => {
+        if (!Object.prototype.hasOwnProperty.call(category, 'parentId')) {
+          category.parentId = null;
+        }
+      });
+    }
+
+    function addCard(text) {
+      const value = text.trim();
+      if (!value) return;
+      state.cards.push({ id: uid(), text: value, zone: 'bank' });
+      els.cardInput.value = '';
+      render();
+      save();
+    }
+
+    function addCategory(name = '') {
+      const count = state.categories.filter(category => !category.parentId).length + 1;
+      state.categories.push({ id: uid(), name: name || `Group ${count}`, parentId: null });
+      render();
+      save();
+    }
+
+    function addSubcategory(parentId) {
+      const parent = state.categories.find(category => category.id === parentId);
+      if (!parent) return;
+      const count = state.categories.filter(category => category.parentId === parentId).length + 1;
+      state.categories.push({ id: uid(), name: `Subcategory ${count}`, parentId });
+      render();
+      save();
+    }
+
+    function getChildCategories(parentId) {
+      return state.categories.filter(category => category.parentId === parentId);
+    }
+
+    function getCategoryAndDescendantIds(categoryId) {
+      const ids = [categoryId];
+      getChildCategories(categoryId).forEach(child => {
+        ids.push(...getCategoryAndDescendantIds(child.id));
+      });
+      return ids;
+    }
+
+    function deleteCategory(categoryId) {
+      const idsToDelete = getCategoryAndDescendantIds(categoryId);
+      state.cards.forEach(card => {
+        if (idsToDelete.includes(card.zone)) card.zone = 'bank';
+      });
+      state.categories = state.categories.filter(category => !idsToDelete.includes(category.id));
+      render();
+      save();
+    }
+
+    function removeCard(cardId) {
+      state.cards = state.cards.filter(card => card.id !== cardId);
+      render();
+      save();
+    }
+
+    function moveCard(cardId, zone) {
+      const card = state.cards.find(c => c.id === cardId);
+      if (!card) return;
+      card.zone = zone;
+      render();
+      save();
+    }
+
+    function updateExport() {
+      els.exportBox.value = JSON.stringify(state, null, 2);
+    }
+
+    function renderCard(card) {
+      const node = els.cardTemplate.content.firstElementChild.cloneNode(true);
+      node.dataset.cardId = card.id;
+      node.querySelector('.card-text').textContent = card.text;
+
+      node.addEventListener('dragstart', event => {
+        node.classList.add('dragging');
+        event.dataTransfer.setData('text/plain', card.id);
+      });
+
+      node.addEventListener('dragend', () => {
+        node.classList.remove('dragging');
+      });
+
+      const removeBtn = node.querySelector('.card-remove');
+
+      if (card.zone === 'bank') {
+        removeBtn.title = 'Delete card';
+        removeBtn.addEventListener('click', () => removeCard(card.id));
+      } else {
+        removeBtn.title = 'Return to unsorted cards';
+        removeBtn.addEventListener('click', () => moveCard(card.id, 'bank'));
+      }
+
+      return node;
+    }
+
+    function makeDropzoneActive(zoneEl) {
+      zoneEl.addEventListener('dragover', event => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
+      zoneEl.addEventListener('drop', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const cardId = event.dataTransfer.getData('text/plain');
+        moveCard(cardId, zoneEl.dataset.zone);
+      });
+    }
+
+    function renderImportedCard(card) {
+      const node = document.createElement('div');
+      node.className = 'card';
+      node.draggable = false;
+      node.innerHTML = `<span class="card-text"></span>`;
+      node.querySelector('.card-text').textContent = card.text;
+      return node;
+    }
+
+    function renderImportedSort(data) {
+      const safeTitle = typeof data.title === 'string' && data.title.trim()
+        ? data.title.trim()
+        : 'Imported sort preview';
+      const safeInstructions = typeof data.instructions === 'string' && data.instructions.trim()
+        ? data.instructions.trim()
+        : 'No instructions included.';
+      const safeCards = Array.isArray(data.cards) ? data.cards : [];
+      const safeCategories = Array.isArray(data.categories) ? data.categories : [];
+
+      els.importedTitle.textContent = safeTitle;
+      els.importedInstructions.textContent = safeInstructions;
+      els.importedCardCount.textContent = `${safeCards.length} card${safeCards.length === 1 ? '' : 's'}`;
+
+      els.importedBank.innerHTML = '';
+      const importedBankCards = safeCards.filter(card => card.zone === 'bank');
+      importedBankCards.forEach(card => els.importedBank.appendChild(renderImportedCard(card)));
+      els.importedBankZone.classList.toggle('empty', importedBankCards.length === 0);
+
+      els.importedCategories.innerHTML = '';
+
+      const childCategoriesForImport = parentId => safeCategories.filter(category => {
+        const categoryParentId = category.parentId || null;
+        return categoryParentId === parentId;
+      });
+
+      childCategoriesForImport(null).forEach(category => {
+        const wrapper = document.createElement('section');
+        wrapper.className = 'dropzone';
+
+        const heading = document.createElement('h3');
+        heading.textContent = category.name || 'Untitled group';
+        wrapper.appendChild(heading);
+
+        const list = document.createElement('div');
+        list.className = 'card-list';
+        const cards = safeCards.filter(card => card.zone === category.id);
+        cards.forEach(card => list.appendChild(renderImportedCard(card)));
+        wrapper.appendChild(list);
+
+        const childCategories = childCategoriesForImport(category.id);
+        if (childCategories.length) {
+          const subcategoryWrap = document.createElement('div');
+          subcategoryWrap.className = 'subcategories';
+          childCategories.forEach(subcategory => {
+            const subWrapper = document.createElement('section');
+            subWrapper.className = 'dropzone subcategory-zone';
+
+            const subheading = document.createElement('div');
+            subheading.className = 'subcategory-label';
+            subheading.textContent = subcategory.name || 'Untitled subcategory';
+            subWrapper.appendChild(subheading);
+
+            const subList = document.createElement('div');
+            subList.className = 'card-list';
+            const subCards = safeCards.filter(card => card.zone === subcategory.id);
+            subCards.forEach(card => subList.appendChild(renderImportedCard(card)));
+            subWrapper.classList.toggle('empty', subCards.length === 0);
+            subWrapper.appendChild(subList);
+            subcategoryWrap.appendChild(subWrapper);
+          });
+          wrapper.appendChild(subcategoryWrap);
+        }
+
+        wrapper.classList.toggle('empty', cards.length === 0 && childCategories.length === 0);
+        els.importedCategories.appendChild(wrapper);
+      });
+    }
+
+    function clearImportedSort(message = 'No imported sort loaded.') {
+      els.importBox.value = '';
+      els.importStatus.textContent = message;
+      renderImportedSort({
+        title: 'Imported sort preview',
+        instructions: 'Paste JSON and click Load sort.',
+        cards: [],
+        categories: []
+      });
+    }
+
+    function loadImportedSortFromText(raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('Invalid JSON structure.');
+        }
+        renderImportedSort(parsed);
+        els.importStatus.textContent = 'Imported sort loaded successfully.';
+      } catch (error) {
+        els.importStatus.textContent = `Could not load JSON: ${error.message}`;
+      }
+    }
+
+    function render() {
+      els.boardTitle.textContent = state.title;
+      els.boardInstructions.textContent = state.instructions;
+      els.titleInput.value = state.title;
+      els.instructionsInput.value = state.instructions;
+      els.cardCount.textContent = `${state.cards.length} card${state.cards.length === 1 ? '' : 's'}`;
+
+      els.bank.innerHTML = '';
+      const bankCards = state.cards.filter(card => card.zone === 'bank');
+      bankCards.forEach(card => els.bank.appendChild(renderCard(card)));
+
+      const bankZone = els.bank.closest('.dropzone');
+      bankZone.classList.toggle('empty', bankCards.length === 0);
+
+      els.categories.innerHTML = '';
+      const topLevelCategories = getChildCategories(null);
+
+      topLevelCategories.forEach(category => {
+        const wrapper = document.createElement('section');
+        wrapper.className = 'dropzone';
+        wrapper.dataset.zone = category.id;
+
+        const headingRow = document.createElement('div');
+        headingRow.className = 'category-heading-row';
+
+        const input = document.createElement('input');
+        input.className = 'category-input';
+        input.value = category.name;
+        input.setAttribute('aria-label', 'Category name');
+        input.addEventListener('input', () => {
+          category.name = input.value;
+          save();
+        });
+
+        const controls = document.createElement('div');
+        controls.className = 'category-controls';
+
+        const addSubcategoryBtn = document.createElement('button');
+        addSubcategoryBtn.className = 'btn';
+        addSubcategoryBtn.type = 'button';
+        addSubcategoryBtn.textContent = 'Add subcategory';
+        addSubcategoryBtn.addEventListener('click', () => addSubcategory(category.id));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.type = 'button';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteCategory(category.id));
+
+        controls.appendChild(addSubcategoryBtn);
+        controls.appendChild(deleteBtn);
+        headingRow.appendChild(input);
+        headingRow.appendChild(controls);
+
+        const list = document.createElement('div');
+        list.className = 'card-list';
+
+        const cards = state.cards.filter(card => card.zone === category.id);
+        cards.forEach(card => list.appendChild(renderCard(card)));
+
+        wrapper.appendChild(headingRow);
+        wrapper.appendChild(list);
+
+        const childCategories = getChildCategories(category.id);
+        if (childCategories.length) {
+          const subcategories = document.createElement('div');
+          subcategories.className = 'subcategories';
+
+          childCategories.forEach(subcategory => {
+            const subWrapper = document.createElement('section');
+            subWrapper.className = 'dropzone subcategory-zone';
+            subWrapper.dataset.zone = subcategory.id;
+
+            const subHeadingRow = document.createElement('div');
+            subHeadingRow.className = 'category-heading-row';
+
+            const subInput = document.createElement('input');
+            subInput.className = 'category-input';
+            subInput.value = subcategory.name;
+            subInput.setAttribute('aria-label', 'Subcategory name');
+            subInput.addEventListener('input', () => {
+              subcategory.name = subInput.value;
+              save();
+            });
+
+            const subDeleteBtn = document.createElement('button');
+            subDeleteBtn.className = 'btn btn-danger';
+            subDeleteBtn.type = 'button';
+            subDeleteBtn.textContent = 'Delete subcategory';
+            subDeleteBtn.addEventListener('click', () => deleteCategory(subcategory.id));
+
+            subHeadingRow.appendChild(subInput);
+            subHeadingRow.appendChild(subDeleteBtn);
+
+            const subList = document.createElement('div');
+            subList.className = 'card-list';
+            const subCards = state.cards.filter(card => card.zone === subcategory.id);
+            subCards.forEach(card => subList.appendChild(renderCard(card)));
+
+            subWrapper.classList.toggle('empty', subCards.length === 0);
+            subWrapper.appendChild(subHeadingRow);
+            subWrapper.appendChild(subList);
+            subcategories.appendChild(subWrapper);
+            makeDropzoneActive(subWrapper);
+          });
+
+          wrapper.appendChild(subcategories);
+        }
+
+        wrapper.classList.toggle('empty', cards.length === 0 && childCategories.length === 0);
+        els.categories.appendChild(wrapper);
+        makeDropzoneActive(wrapper);
+      });
+
+      makeDropzoneActive(bankZone);
+      updateExport();
+    }
+
+    els.addCardBtn.addEventListener('click', () => addCard(els.cardInput.value));
+    els.cardInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') addCard(els.cardInput.value);
+    });
+
+    els.addCategoryBtn.addEventListener('click', () => addCategory());
+
+    els.openInterpreterBtn.addEventListener('click', () => {
+      els.interpreterPanel.style.display = 'block';
+      els.openInterpreterBtn.textContent = 'Interpreter open';
+    });
+
+    els.closeInterpreterBtn.addEventListener('click', () => {
+      els.interpreterPanel.style.display = 'none';
+      els.openInterpreterBtn.textContent = 'Open interpreter';
+    });
+
+    els.loadImportBtn.addEventListener('click', () => {
+      loadImportedSortFromText(els.importBox.value);
+    });
+
+    els.sampleImportBtn.addEventListener('click', () => {
+      els.importBox.value = JSON.stringify(state, null, 2);
+      loadImportedSortFromText(els.importBox.value);
+    });
+
+    els.clearImportBtn.addEventListener('click', () => {
+      clearImportedSort();
+    });
+
+    els.exportBtn.addEventListener('click', () => {
+      updateExport();
+      els.exportBox.focus();
+      els.exportBox.select();
+    });
+
+    els.copyBtn.addEventListener('click', async () => {
+      updateExport();
+      try {
+        await navigator.clipboard.writeText(els.exportBox.value);
+        els.copyBtn.textContent = 'Copied';
+        setTimeout(() => (els.copyBtn.textContent = 'Copy export'), 1200);
+      } catch {
+        els.copyBtn.textContent = 'Copy failed';
+        setTimeout(() => (els.copyBtn.textContent = 'Copy export'), 1200);
+      }
+    });
+
+    els.generateLinkBtn.addEventListener('click', () => {
+      generateShareLink();
+      els.generateLinkBtn.textContent = 'Link ready';
+      setTimeout(() => (els.generateLinkBtn.textContent = 'Generate share link'), 1200);
+    });
+
+    els.copyLinkBtn.addEventListener('click', async () => {
+      const url = els.shareLinkBox.value || generateShareLink();
+      try {
+        await navigator.clipboard.writeText(url);
+        els.copyLinkBtn.textContent = 'Copied';
+        setTimeout(() => (els.copyLinkBtn.textContent = 'Copy share link'), 1200);
+      } catch {
+        els.copyLinkBtn.textContent = 'Copy failed';
+        setTimeout(() => (els.copyLinkBtn.textContent = 'Copy share link'), 1200);
+      }
+    });
+
+    els.copyBtn.addEventListener('click', async () => {
+      updateExport();
+      try {
+        await navigator.clipboard.writeText(els.exportBox.value);
+        els.copyBtn.textContent = 'Copied';
+        setTimeout(() => (els.copyBtn.textContent = 'Copy export'), 1200);
+      } catch {
+        els.copyBtn.textContent = 'Copy failed';
+        setTimeout(() => (els.copyBtn.textContent = 'Copy export'), 1200);
+      }
+    });
+
+    els.resetBtn.addEventListener('click', () => {
+      if (!confirm('Reset the board and remove all cards?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state.title = 'Sort these cards into groups that make sense to you';
+      state.instructions = 'Create cards, share this page, and ask classmates to group the cards into categories that feel logical. They can also rename the category and subcategory headings.';
+      state.cards = [];
+      state.categories = [
+        { id: uid(), name: 'Group 1', parentId: null },
+        { id: uid(), name: 'Group 2', parentId: null },
+        { id: uid(), name: 'Group 3', parentId: null }
+      ];
+      render();
+      save();
+    });
+
+    els.titleInput.addEventListener('input', () => {
+      state.title = els.titleInput.value.trim() || 'Untitled card sort';
+      render();
+      save();
+    });
+
+    els.instructionsInput.addEventListener('input', () => {
+      state.instructions = els.instructionsInput.value.trim();
+      render();
+      save();
+    });
+
+    if (!loadFromUrl()) {
+      load();
+    }
+    normalizeCategories();
+    render();
+    save();
+    clearImportedSort();
+    generateShareLink();
+  </script>
+</body>
+</html>
