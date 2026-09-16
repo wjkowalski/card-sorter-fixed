@@ -801,18 +801,24 @@
       });
     }
 
-    function loadImportedSortFromText(raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object') {
-          throw new Error('Invalid JSON structure.');
-        }
-        renderImportedSort(parsed);
-        els.importStatus.textContent = 'Imported sort loaded successfully.';
-      } catch (error) {
-        els.importStatus.textContent = `Could not load JSON: ${error.message}`;
-      }
+function loadImportedSortFromText(raw) {
+  try {
+    const cleaned = raw
+      .replace(/^\uFEFF/, '')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+
+    const parsed = JSON.parse(cleaned);
+
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Invalid JSON structure.');
     }
+
+    renderImportedSort(parsed);
+    els.importStatus.textContent = 'Imported sort loaded successfully.';
+  } catch (error) {
+    els.importStatus.textContent = `Could not load JSON: ${error.message}`;
+  }
+}
 
     function render() {
       els.boardTitle.textContent = state.title;
