@@ -341,13 +341,12 @@
         <p>This repo is public. Anyone can download it, use it, and modify it as they wish!</p>
         <p>INSTRUCTIONS:<br />
           Add cards with the large plus button, then drag them into categories or subcategories. <br />
-          To share the current card arrangement, use Share Link:
+          To send someone a list of unsorted cards so they can sort them, use Share Link: 
           <ol>
             <li>Enter the card names individually in the Create Cards section</li>
-            <li>Leave the cards unsorted, or arrange them in categories and subcategories</li>
             <li>Click Generate Share Link</li>
             <li>Click Copy Share Link</li>
-            <li>Sharing that link will open the sorting tool with the current arrangement preserved</li>
+            <li>Sharing that link with anyone should bring them to the sorting tool with the unsorted cards pre-populated and ready to be sorted</li>
           </ol>
 
           To complete the APPD 5012 Card Sorting assignment, or to simply send someone your list of sorted cards as an unsortable object, use Export Data:
@@ -440,7 +439,7 @@
         <h2>Export</h2>
         <div class="field">
           <label for="shareLinkBox">Share link</label>
-          <input id="shareLinkBox" type="text" readonly placeholder="Generate a link to the current card arrangement" />
+          <input id="shareLinkBox" type="text" readonly placeholder="Generate a share link to pre-populate unsorted cards" />
         </div>
         <textarea id="exportBox" class="json-box" readonly placeholder="Exported data will appear here"></textarea>
       </aside>
@@ -530,7 +529,7 @@
       return {
         title: state.title,
         instructions: state.instructions,
-        cards: state.cards.map(card => ({ ...card })),
+        cards: state.cards.map(card => ({ ...card, zone: 'bank' })),
         categories: state.categories.map(category => ({ ...category }))
       };
     }
@@ -668,8 +667,21 @@
       save();
     }
 
+    function buildExportData() {
+      return {
+        exportVersion: 3,
+        title: state.title,
+        instructions: state.instructions,
+        cards: state.cards.map(card => ({ ...card })),
+        categories: state.categories.map(category => ({
+          ...category,
+          parentId: category.parentId == null ? null : category.parentId
+        }))
+      };
+    }
+
     function updateExport() {
-      els.exportBox.value = JSON.stringify(state, null, 2);
+      els.exportBox.value = JSON.stringify(buildExportData(), null, 2);
     }
 
     function renderCard(card) {
@@ -732,63 +744,67 @@
       const safeCards = Array.isArray(data.cards) ? data.cards : [];
       const safeCategories = Array.isArray(data.categories) ? data.categories : [];
 
+      // Preserve the submitted sort exactly as exported. A card belongs to the
+      // category/subcategory whose id matches the card's zone value.
+      const categoryIds = new Set(safeCategories.map(category => String(category.id)));
+
       els.importedTitle.textContent = safeTitle;
       els.importedInstructions.textContent = safeInstructions;
       els.importedCardCount.textContent = `${safeCards.length} card${safeCards.length === 1 ? '' : 's'}`;
 
       els.importedBank.innerHTML = '';
-      const importedBankCards = safeCards.filter(card => card.zone === 'bank');
+      const importedBankCards = safeCards.filter(card => {
+        const zone = card.zone == null ? 'bank' : String(card.zone);
+        return zone === 'bank' || !categoryIds.has(zone);
+      });
       importedBankCards.forEach(card => els.importedBank.appendChild(renderImportedCard(card)));
       els.importedBankZone.classList.toggle('empty', importedBankCards.length === 0);
 
       els.importedCategories.innerHTML = '';
 
       const childCategoriesForImport = parentId => safeCategories.filter(category => {
-        const categoryParentId = category.parentId || null;
+        const categoryParentId = category.parentId == null ? null : String(category.parentId);
         return categoryParentId === parentId;
       });
 
-      childCategoriesForImport(null).forEach(category => {
+      function renderImportedCategory(category, isSubcategory = false) {
+        const categoryId = String(category.id);
         const wrapper = document.createElement('section');
-        wrapper.className = 'dropzone';
+        wrapper.className = isSubcategory ? 'dropzone subcategory-zone' : 'dropzone';
 
-        const heading = document.createElement('h3');
-        heading.textContent = category.name || 'Untitled group';
+        const heading = document.createElement(isSubcategory ? 'div' : 'h3');
+        if (isSubcategory) heading.className = 'subcategory-label';
+        heading.textContent = category.name || (isSubcategory ? 'Untitled subcategory' : 'Untitled group');
         wrapper.appendChild(heading);
 
         const list = document.createElement('div');
         list.className = 'card-list';
-        const cards = safeCards.filter(card => card.zone === category.id);
+
+        const cards = safeCards.filter(card => String(card.zone) === categoryId);
         cards.forEach(card => list.appendChild(renderImportedCard(card)));
         wrapper.appendChild(list);
 
-        const childCategories = childCategoriesForImport(category.id);
+        const childCategories = childCategoriesForImport(categoryId);
         if (childCategories.length) {
           const subcategoryWrap = document.createElement('div');
           subcategoryWrap.className = 'subcategories';
-          childCategories.forEach(subcategory => {
-            const subWrapper = document.createElement('section');
-            subWrapper.className = 'dropzone subcategory-zone';
-
-            const subheading = document.createElement('div');
-            subheading.className = 'subcategory-label';
-            subheading.textContent = subcategory.name || 'Untitled subcategory';
-            subWrapper.appendChild(subheading);
-
-            const subList = document.createElement('div');
-            subList.className = 'card-list';
-            const subCards = safeCards.filter(card => card.zone === subcategory.id);
-            subCards.forEach(card => subList.appendChild(renderImportedCard(card)));
-            subWrapper.classList.toggle('empty', subCards.length === 0);
-            subWrapper.appendChild(subList);
-            subcategoryWrap.appendChild(subWrapper);
+          childCategories.forEach(child => {
+            subcategoryWrap.appendChild(renderImportedCategory(child, true));
           });
           wrapper.appendChild(subcategoryWrap);
         }
 
         wrapper.classList.toggle('empty', cards.length === 0 && childCategories.length === 0);
-        els.importedCategories.appendChild(wrapper);
+        return wrapper;
+      }
+
+      childCategoriesForImport(null).forEach(category => {
+        els.importedCategories.appendChild(renderImportedCategory(category));
       });
+
+      const placedCount = safeCards.filter(card => categoryIds.has(String(card.zone))).length;
+      const unsortedCount = safeCards.length - placedCount;
+      els.importStatus.textContent = `Imported sort loaded: ${placedCount} placed, ${unsortedCount} unsorted.`;
     }
 
     function clearImportedSort(message = 'No imported sort loaded.') {
@@ -802,24 +818,17 @@
       });
     }
 
-function loadImportedSortFromText(raw) {
-  try {
-    const cleaned = raw
-      .replace(/^\uFEFF/, '')
-      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
-
-    const parsed = JSON.parse(cleaned);
-
-    if (!parsed || typeof parsed !== 'object') {
-      throw new Error('Invalid JSON structure.');
+    function loadImportedSortFromText(raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('Invalid JSON structure.');
+        }
+        renderImportedSort(parsed);
+      } catch (error) {
+        els.importStatus.textContent = `Could not load JSON: ${error.message}`;
+      }
     }
-
-    renderImportedSort(parsed);
-    els.importStatus.textContent = 'Imported sort loaded successfully.';
-  } catch (error) {
-    els.importStatus.textContent = `Could not load JSON: ${error.message}`;
-  }
-}
 
     function render() {
       els.boardTitle.textContent = state.title;
@@ -961,7 +970,7 @@ function loadImportedSortFromText(raw) {
     });
 
     els.sampleImportBtn.addEventListener('click', () => {
-      els.importBox.value = JSON.stringify(state, null, 2);
+      els.importBox.value = JSON.stringify(buildExportData(), null, 2);
       loadImportedSortFromText(els.importBox.value);
     });
 
